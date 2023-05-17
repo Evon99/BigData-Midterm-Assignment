@@ -55,7 +55,15 @@ ex)
   - 반복(?): ?는 반복은 아니지만 비슷한 개념으로 {0, 1}과 같은 의미를 지님. 즉, 문자가 있거나 없거나 둘 다 매치 되는 경우 뜻함
       * ab?c: "a + b(있어도 되고 없어도 된다) + c"
 *, +, ?메타 문자는 모두 {m, n} 형태로 고쳐 쓰는 것이 가능하지만 가독성을 위해 *, +, ?메타 문자를 사용하는 것이 좋다.
-
++ 괄호(): 그룹을 나타내며, 그룹화된 패턴을 처리할 때 사용
+  - (ab)+: ab가 1번 이상 반복(+)되는 패턴을 의미
+    * ab: ab가 1번 반복으로 정규식과 매치됨
+    * abab: abab가 2번 반복으로 정규식과 매치됨
+    * ababab: ababab가 3번 반복으로 정규식과 매치됨
+    * abc: ab가 반복되지 않으므로 정규식과 매치되지 않음
+    * aab: ab로 시작하지 않으므로 정규식과 매치되지 않음
++ 파이프(|): 둘 중 하나의 패턴과 일치를 의미
+  - a|b: a 또는 b와 일치를 의미
 4. 정규표현식의 예시 (이메일)
 + \w+@\w+\\.[a-zA-Z]{2,3}
   - \w+: 1개 이상의 알파벳 대소문자, 숫자, 밑줄 (_) 문자를 나타냅니다. 이메일 주소의 로컬 파트인 이메일 아이디 부분에 해당
@@ -89,9 +97,9 @@ p = re.compile('[a-z]+')
 * 예시에 사용될 객체 p 생성
 컴파일된 패턴 객체는 다음의 4가지 메소드를 제공
 + match(): 문자열의 처음부터 정규식과 매치되는지 조사, 반환값: match 객체
-  - \>>> m = p.match("python") <br>
+  - \>>> m = p.match("bigdata") <br>
     \>>> print(m) <br>
-    <_sre.SRE_Match object at 0x01F3F9F8> <br>
+    <re.Match object; span=(0, 7), match='bigdata'> <br>
     "python"은 [a-z]+ 정규식에 부합되므로 match 객체를 돌려줌 <br>
     in Python, 매치 여부 확인법
     ```
@@ -103,11 +111,40 @@ p = re.compile('[a-z]+')
     else:
       print("정규식 불일치")
     ```
+  - 4가지 메서드
+    * group(): 매치된 문자열을 돌려줌
+    * start(): 매치된 문자열의 시작 위치를 돌려줌
+    * end(): 매치된 문자열의 끝 위치를 돌려줌
+    * span(): 매치된 문자열의 (시작, 끝)에 해당하는 튜플을 돌려줌
+    * ex) <br>
+    \>>> m = p.match("bigdata") <br>
+    \>>> m.group() <br>
+    'bigdata' <br>
+    \>>> m.start() <br>
+    0 <br>
+    \>>> m.end() <br>
+    7 <br>
+    \>>> m.span() <br>
+    (0, 7) <br>
+    search()의 경우
+    \>>> m = p.search("50 bigdata") <br>
+    \>>> m.group() <br>
+    'bigdata' <br>
+    \>>> m.start() <br>
+    3 <br>
+    \>>> m.end() <br>
+    10 <br>
+    \>>> m.span() <br>
+    (3, 10)
+
+    * 모듈 단위의 수행법 <br>
+    m = re.match('\[a-z]+', "bigdata")
 + search(): 문자열 전체를 검색하여 정규식과 매치되는지 조사
-  - \>>> m = p.search("python") <br>
+  - \>>> m = p.search("bigdata") <br>
     \>>> print(m) <br>
-    <_sre.SRE_Match object at 0x01F3F9F8> <br>
+    <re.Match object; span=(0, 7), match='bigdata'>> <br>
     3 python 문자열은 첫번째 문자가 숫자이므로 match 메서드에서는 None을 반환함. 하지만 search 메서드는 문자열의 처음부터 검색하는 것이 아니라 문자열 전체를 검색하기 때문에 "python" 문자열과 매치돼서 match객체를 반환
+    
 + findall(): 정규식과 매치되는 모든 문자열(substring)을 리스트로 돌려줌
   - \>>> result = p.findall("life is too short") <br>
     \>>> print(result) <br>
@@ -115,14 +152,78 @@ p = re.compile('[a-z]+')
     정규식과 일치하는 부분인 각 단어들이 반환되는 것이 확인됨
 + finditer(): 정규식과 매치되는 모든 문자열(substring)을 반복 가능한 객체로 돌려줌
   - finditer는 findall과 동일하지만 그 결과로 반복 가능한 객체를 돌려줌 <br>
-    \>>> result = p.findall("life is too short") <br>
+    \>>> result = p.finditer("life is too short") <br>
     \>>> print(result) <br>
-    <callable_iterator object at 0x01F5E390> <br>
+    <callable_iterator object at 0x7f9b68af4220> <br>
     \>>> for r in result: print(r) <br>
     ... <br>
-    <_sre.SRE_Match object at 0x01F3F9F8> <br>
-    <_sre.SRE_Match object at 0x01F3FAD8> <br>
-    <_sre.SRE_Match object at 0x01F3FAA0> <br>
-    <_sre.SRE_Match object at 0x01F3F9F8> <br>
+    <re.Match object; span=(0, 4), match='life'> <br>
+    <re.Match object; span=(5, 7), match='is'> <br>
+    <re.Match object; span=(8, 11), match='too'> <br>
+    <re.Match object; span=(12, 17), match='short'> <br>
 
-   
+7. 정규표현식의 컴파일 옵션
+컴파일 옵션 사용 시 re.DOTALL처럼 전체 옵션이름을 써도 되고, re.S처럼 약어 사용 가능
++ DOTALL(S): 메타 문자 Dot(.)이 줄바꿈 문자를 포함하여 모든 문자와 매치될 수 있도록 한다
+  - ex) <br>
+  \>>> p = re.compile('a.b', re.DOTALL)
+  \>>> m = p.match('a\nb')
+  \>>> print(m)
+  <_sre.SRE_Match object at 0x01FCF3D8>
++ IGNORECASE(I): 대소문자에 관계없이 매치할 수 있도록 한다.
+  - ex) <br>
+  \>>> p = re.compile('\[a-z]', re.I) <br>
+  \>>> p.match('bigdata') <br>
+  <re.Match object; span=(0, 1), match='b'> <br>
+  \>>> p.match('Bigdata') <br>
+  <re.Match object; span=(0, 1), match='B'> <br>
+  \>>> p.match('BIGDATA') <br>
+  <re.Match object; span=(0, 1), match='B'> <br>
+  \[a-z] 정규식은 소문자만을 의미하지만 re.I옵션으로 대소문자 구별없이 매치되는 것을 볼 수 있음
++ MULTILINE(M): 여러줄과 매치할 수 있도록 한다. (^, $ 메타문자의 사용과 관계가 있는 옵션)
+  - <pre>
+    <code>
+    import re
+    p = re.compile("^bigdata\s\w+")
+
+    test = """bigdata one
+    Today is Sunday
+    bigdata two
+    This is Example
+    bigdata three"""
+
+    print(p.findall(test))
+    </code>
+    </pre>
+    <pre>
+    <code>
+    ['bigdata one']
+    </code>
+    </pre>
+    "^bigdata\s\w+": 문자열의 시작이 "bigdata"로 시작하고, 공백이 있으며, 이어서 하나 이상의 단어 문자가 있는 패턴을 의미 <br>
+    ^메타 문자에 의해 bigdata이라는 문자열을 사용한 첫 번째 줄만 매치된 것을 알 수 있음 <br>
+
+  하지만 ^메타 문자를 문자열 전체의 처음이 아니라 각 라인의 처음으로 인식시키고 싶을 때 사용하는 옵션은 re.MULTILINE <br>
+  ex)
+    <pre>
+    <code>
+    import re
+    p = re.compile("^bigdata\s\w+", re.MULTILINE)
+
+    test = """bigdata one
+    Today is Sunday
+    bigdata two
+    This is Example
+    bigdata three"""
+
+    print(p.findall(test))
+    </code>
+    </pre>
+    <pre>
+    <code>
+    ['bigdata one', 'bigdata two', 'bigdata three']
+    </code>
+    </pre>
+    메타 문자 ^가 각 줄마다 적용되는 것이 확인됨
++ VERBOSE(X) - verbose 모드를 사용할 수 있도록 한다. (정규식을 보기 편하게 만들수 있고 주석등을 사용할 수 있게된다.)
+  
