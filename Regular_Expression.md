@@ -5,7 +5,7 @@
 2. 메타문자: 문자를 설명하기 위한 문자로, 문자의 구성을 설명하기 위해 원래 그 문자가 가진 뜻이 아닌 특별한 용도로 사용하는 문자<br>
 정규 표현식에서 사용하는 메타문자: . ^ $ * + ? {} [] \ | ()
 
-3. 정규표현식의 종류 <br>
+### 3. 정규표현식의 종류 <br>
 + []: 문자 클래스인 []는 "[] 사이의 문자들과 매치"라는 의미를 가지며, []사이에는 어떤 문자도 들어갈 수 있다. <br>
 [a, b, c]: "a, b, c 중 한 개의 문자와 매치" <br>
 ex) [a, b, c]와 "a", "bus", "replit"와 어떻게 매치되는가?
@@ -41,7 +41,7 @@ ex)
       * "abc": a와 b사이에 어떤 문자가 존재하지 않기 때문에 위 정규식과 매치되지 않음
       * "a[.]b": []는 내부에 메타문자가 들어가더라도 문자 그대로 인식해주는 특징을 갖고 있습니다. 따라서 a.b와 매치되고 a0b와 같은 문자열은 매치되지 않음
 
-+ 반복 관련 메타 문자 * + ? {}
++ 반복 관련 메타 문자 **\* + ? {}**
   - 반복(\*): 메타문자 \*은 \* 바로 앞에 있는 문자가 0부터 무한대로 반복 될 수 있다는 의미 <br>
   ca*t: c + a(0번 이상 반복) + t 를 의미 -> ct, cat, caaaaat 모두 매치
   - 반복(+): 반복을 나타내는 또 다른 문자인 +, +는 *과 달리 최소 1번 이상 반복될 때 사용 <br>
@@ -235,7 +235,7 @@ p = re.compile('[a-z]+')
   이 코드의 정규식은 가독성이 안좋아 의미를 해석하기 어려워 보인다. 하지만 VERBOSE를 쓰면 다음과 같이 쓸 수 있다.
   <pre>
   <code>
-  charref = re.compile(r"""
+  charref = re.compile(r'''
   &[#]                # "&#"로 시작하는 문자열과 매치. 이는 숫자 기반의 문자 엔티티 참조를 나타냅니다.
   (
      0[0-7]+         """
@@ -256,6 +256,105 @@ p = re.compile('[a-z]+')
     """
   )
   ;                   # 세미콜론으로 끝나는 문자열과 매치함. 이는 문자 엔티티 참조의 끝을 나타냄.
-  """, re.VERBOSE)
+  ''', re.VERBOSE)
   </code>
   </pre>
+  re.VERBOSE 옵션은 문자열에 사용된 whitespace가 컴파일 시 제거되며, #을 이용해 주석문을 달 수 있음
+
+8. 정규표현식의 캡처
++ 캡처: 원하는 부분만을 추출하고 싶을 때 사용하는 것
+  - Ex) 전화번호에서 중간 자리만 추출 하고 싶을 때
+  <pre>
+  <code>
+  import re
+    
+  print(re.findall('\d{3}-(\d{4})-\d{4}', '010-1152-4123'))
+  </code>
+  </pre> 
+  결과
+  <pre>
+  <code>
+  ['1152']
+  </code>
+  </pre>
+  추출하고 싶은 부분을 괄호()로 감싸주면 된다.
++ groups(): match객체에서 일치되는 문자열을 반환하는 group()과 달리 캡처()로 감싼 부분을 반환함
+  - Ex) <br>
+    \>>> m = re.search('\d{3}-(\d{4})-(\d{4})', '010-1152-4123') <br>
+    \>>> print(m) <br>
+    <re.Match object; span=(0, 13), match='010-1152-4123'> <br>
+    \>>> print(m.group()) <br>
+    010-1152-4123 <br>
+    \>>> print(m.groups()) <br>
+    ('1152', '4123') <br>
+    \>>> m.group(1) <br>
+    '1152' <br>
+    \>>> m.group(2) <br>
+    '4123' <br>
+    \>>> m.groups() <br>
+    ('1152', '4123') <br>
++ 비 캡처 그룹: 그룹화를 하려면 ()를 써야하는데, 캡처를 하고싶지 않을 땐 (?:\<regex>)를 사용한다
+  - Ex) <br>
+  \>>> print(re.findall('(456)+','456456')) <br>
+  \['456'] <br>
+  변경된 코드 <br>
+  \>>> print(re.findall('(?:456)+','456456')) <br>
+  \['456456'] <br>
+
+9. 정규표현식의 치환
++ 파이썬의 replace 메서드는 정규식 패턴에 대응하는 문자열을 찾지 못함 -> re.sub 메서드를 사용
+  - re.sub 메서드의 파라미터
+    * pattern: 매치시킬 패턴
+    * repl: 변경할 문자
+    * string: 적용 문자열
+    * count: 치환개수(최대값)
+  - Ex) <br>
+    \>>> print(re.sub(pattern='Bigdata', repl='Java', count=2, \\ <br>
+    ...              string='Bigdata, Bigdata, C++ are computer language.')) <br>
+    Java, Java, C++ are computer language.
+  - re.subn 메서드: re.sub 기능에 치환된 개수의 튜플을 반환
+    \>>> print(re.subn(pattern='Bigdata', repl='Java', count=2, \\ <br>
+    ...              string='Bigdata, Bigdata, C++ are computer language.')) <br>
+    ('Java, Java, C++ are computer language.', 2) <br>
+
+10. 정규표현식의 split
++ re.split: 파이썬의 문자열 메서드 중 split와 유사
+  - Ex) <br>
+    \>>> print(re.split('<\[^<>]*>', <br>
+               '\<html> Wow \<head> header \</head> \<body> Hey \</body> \</html>')) <br>
+    \['', ' Wow ', ' header ', ' ', ' Hey ', ' ', ''] <br>
+    * <: '<'를 나타냄 
+    * \[^<>]: <와 >를 제외한 모든 문자가 0번 이상 반복되는 부분을 나타냄. 이는 <와 > 사이에 있는 내용을 의미
+    * \>: > 문자를 나타냄
+
+11. 정규표현식의 연산을 섞은 치환
++ re.sub를 쓸 때 일치부에 나타나지도 않고, literal text에도 나타나지 않는 문자열로 치환하고 싶은 경우가 생길 수 있음 <br>
+  re.sub는 인자 repl을 받을 때 함수로도 받을 수 있다. 함수는 인자로 match 객체를 받으며 문자열을 반환해야함
+  - Ex) 소수로 표현된 숫자를 찾은 다음 퍼센티지로 변환하기
+    <pre>
+    <code>
+    def convert_percentage(match_obj):
+    number = float(match_obj.group())
+    return str(number * 100) + '%'
+
+    print(re.sub(pattern=r'\b0\.\d+\b',
+             repl=convert_percentage,
+             string='Red 0.250, Green 0.001, Blue 0.749, Black 1.5'))
+    </code>
+    </pre>
+    결과
+    <pre>
+    <code>
+    Red 25.0%, Green 0.1%, Blue 74.9%, Black 1.5
+    </code>
+    </pre>
+
+12. 정규표현식의 조건문
++ 조건문은 캡처 그룹을 사용해 앞에서 문자열이 일치되었는지 아닌지에 따라 다음 부분에서는 다른 일치 조건을 제시할 때 쓰임 <br>
+**(?(숫자)맞으면|아니면)**
++ Ex) <br>
+(a)?b(?(1)c|d) == abc|bd
+  1. 먼저 a를 검사. 만약 찾는 문자열에 ‘a’가 있으면 첫 번째 명시적 캡처에는 ‘a’가 들어가고, ‘a’가 없으면, 빈 문자열이 (1)에 저장
+  2. 다음으로 b. 만약 ‘b’가 없으면 정규식은 일치하지 않습니다. ‘b’가 있다고 가정
+  3. (?(1)c|d) 이 조건문은 (1)에 값이 존재하면 c, 존재하지 않으면 d를 의미. 즉 a가 존재했었다면 abc가 완성되고, a가 존재하지 않았다면 bd가 완성
+  
