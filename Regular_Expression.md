@@ -379,7 +379,7 @@ p = re.compile('[a-z]+')
   pattern = r"\s+"
   text = "Hello  World   Python"
   tokens = re.split(pattern, text)
-  print(tokens)  # 출력: ['Hello', 'World', 'Python
+  print(tokens)  # 출력: ['Hello', 'World', 'Python]
 
   # 문자열에서 중복된 단어 찾기
   text = "Computer language is Bigdata Bigdata Java Java C++ C++"
