@@ -8,13 +8,13 @@
 #### 3. 정규표현식의 종류 <br>
 + []: 문자 클래스인 []는 "[] 사이의 문자들과 매치"라는 의미를 가지며, []사이에는 어떤 문자도 들어갈 수 있다. <br>
 \[a, b, c]: "a, b, c 중 한 개의 문자와 매치" <br>
-ex) \[a, b, c]와 "a", "bus", "replit"와 어떻게 매치되는가?
+Ex) \[a, b, c]와 "a", "bus", "replit"와 어떻게 매치되는가?
   - "a": 정규식과 일치하는 문자인 a가 있으므로 매치
   - "bus": 정규식과 일치하는 문자인 b가 있으므로 매치
   - "replit": 정규식과 일치하는 문자인 a, b, c중 어느 하나도 포함하고 있지 않으므로 매치되지 않음
   
 + 하이픈(-), 캐럿(^): 하이픈(-)은 두 문자 사이의 범위(from - to)를 의미, 캐럿(^)은 반대를 의미 <br>
-ex)
+Ex)
   - \[a-zA-Z]: a부터 z까지 그리고 A부터 Z까지로 알파벳 모두 매치
   - \[0-9]: 0부터 9까지의 범위로 숫자 매치
   - \[^0-9]: 0부터 9까지의 범위의 부정으로 숫자가 아닌 문자만 매치
@@ -357,4 +357,44 @@ p = re.compile('[a-z]+')
   1. 먼저 a를 검사. 만약 찾는 문자열에 ‘a’가 있으면 첫 번째 명시적 캡처에는 ‘a’가 들어가고, ‘a’가 없으면, 빈 문자열이 (1)에 저장
   2. 다음으로 b. 만약 ‘b’가 없으면 정규식은 일치하지 않습니다. ‘b’가 있다고 가정
   3. (?(1)c|d) 이 조건문은 (1)에 값이 존재하면 c, 존재하지 않으면 d를 의미. 즉 a가 존재했었다면 abc가 완성되고, a가 존재하지 않았다면 bd가 완성
-  
+
+#### 13. 정규표현식의 코드 예시
+<pre>
+<code>
+  import re
+
+  # 숫자 추출하기
+  text = "이 예시는 1234 숫자를 추출하는 예시입니다."
+  pattern = r'\d+'
+  matches = re.findall(pattern, text)
+  print(matches)  # 출력: ['1234']
+
+  # 단어 치환하기
+  text = "빅데이터, 씨언어, 자바, 자바스크립트"
+  pattern = r'씨언어'
+  replace_text = re.sub(pattern, 'PHP', text)
+  print(replace_text) # 출력: 빅데이터, PHP, 자바, 자바스크립트
+
+  # 패턴으로 문자열 분할하기
+  pattern = r"\s+"
+  text = "Hello  World   Python"
+  tokens = re.split(pattern, text)
+  print(tokens)  # 출력: ['Hello', 'World', 'Python
+
+  # 문자열에서 중복된 단어 찾기
+  text = "Computer language is Bigdata Bigdata Java Java C++ C++"
+  pattern = r'\b(\w+)\b(?=.*\b\1\b)'
+  # \b(\w+)\b: 단어 경계('\b')로 이루어진 단어를 찾음. \w+: 한 개 이상의 알파벳 또는 숫자 의미
+  # (?=.*\b\1\b): (?= )는 전방탐색을 나타내는 구문으로, 괄호 안에 있는 패턴에 매칭되어야 한다는 조건. .*은 임   의의 문자열이 반드시 존재해야 한다는 의미. \b는 단어 경계 의미. \1: 첫 번째 그룹과 동일한 단어 찾기. 여기서의   첫 번째 그룹은 (\w+)를 의미
+  duplicates = re.findall(pattern, text)
+  print(duplicates)  # 출력: ['Bigdata', 'Java', 'Javascript']
+
+  # ip주소 추출
+  text = "IP 주소는 192.168.200.170입니다."
+  pattern = r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}"
+  # \d{1,3}: 1~3회 반복하는 숫자 찾기
+  # \.: 옥텟을 의미
+  ips = re.findall(pattern, text)
+  print(ips)  # 출력: ['192.168.200.170']
+</code>
+</pre>
