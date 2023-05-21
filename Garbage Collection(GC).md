@@ -37,7 +37,6 @@
 첫 번째 참조: a가 위치한 스택의 주소가 콜스택에서 참조되고 있음(variable 생성) <br>
 두 번째 참조: a가 getrefcount()에 전달될 때 <br>
 만약 콜스택에서 a가 위치한 레벨의 함수가 실행 완료되면, 콜스택에서 참조하고 있는 a가 사라지기에 reference count는 0이 되고 gc에 의해 메모리에서 해제 <br>
- <br>
 \>>> import sys <br>
 \>>> a = 'garbage' <br>
 \>>> b = \[a] <br>
