@@ -78,11 +78,83 @@
   </pre>
   위 코드에서 object1와 object2가 서로 참조하기 있기 때문에 레퍼런스 카운트는 둘 다 1이지만 도달할 수 없는(unreachable) 가비지가 됨
   - 이러한 순환 참조가 반복되어 가비지를 처리하지 못하게 되면 메모리 누수(leak)로 이어지게 됨.
+  - 해결 방법
+    1. None 활용
+      * 더 이상 사용하지 않는 객체에 'None' 값을 주어 해당 객체에 대한 참조를 해제한다.
+      * Ex)
+      <pre>
+      <code>
+      class Object:
+        def __init__(self, value):
+          self.value = value
+          self.next = None
+
+      def solve_circular_reference():
+        object1 = Object(1)
+        object2 = Object(2)
+        object1.next = object2  # object1의 next는 object2를 가리킴
+        print(object1.next is object2)  # True로 object1의 next는 object2를 가리킴
+        # 이 때 object1의 레퍼런스 카운터는 Object(1)와 object1.next로 2
+        object2.next = object1
+        print(object2.next is object1)  # True로 object2의 next는 object1을 가리킴
+        # object2는 Object(2)와 object2.next로 2
+        print(object1.next)
+        # <__main__.Object object at 0x7efd7b3bbee0> 객체 표현 출력
+        print(object2.next)
+        # <__main__.Object object at 0x7efd7b3bbfd0> 객체 표현 출력
+        object1.next = None
+        object2.next = None
+        print(object1.next)
+        # None 출력
+        print(object2.next)
+        # None 출력
+
+        solve_circular_reference()
+      </code>
+      </pre>
+    2. 약한 참조
+       * 정의: 대상 객체를 참조는 하지만, 대상 객체에 대해서 참조 수(레퍼런스 카운터)에는 영향을 주지 않는 것 <br>
+       강한 참조(일반적인 참조)와 달리, GC가 해당 객체를 회수할 수 있는 상태 유지 <br>
+       -> 객체를 참조하는 동안 객체의 생명 주기에 직접적인 영향을 주지 않음. 즉, 다른 코드에서 객체에 대한 강한 참조가 없는 경우에도 약한 참조는 해당 객체를 참조할 수 있음
+       * 함수: class weakref.ref(object\[, callback])
+         + 객체에 대한 약한 참조 객체를 반환 <br>
+           객체가 메모리에 존재하는 경우 객체에 대한 참조를 반환하며, 그렇지 않은 경우 None을 반환
+      * Ex)
+          <pre>
+          <code>
+          import weakref
+
+          class Object:
+            def __init__(self, value):
+              self.value = value
+              self.next = None
+
+          def solve_circular_reference():
+            object1 = Object(1)
+            object2 = Object(2)
+            object1.next = weakref.ref(object2)
+            print(object1.next is object2)  # object2를 약한 참조 하므로 False
+            object2.next = weakref.ref(object1)
+            print(object2.next is object1)  # object1을 약한 참조 하므로 False
+            print(object1.next)
+            # <weakref at 0x7f458ff13bf0; to 'Object' at 0x7f45a4207670> 객체 표현 출력
+            print(object2.next)
+            # <weakref at 0x7f45a41fca40; to 'Object' at 0x7f45a42072e0> 객체 표현 출력
+
+            solve_circular_reference()
+          </code>
+          </pre>
+      * 특징
+        + 객체 캐싱, 캐시 관리, 콜백 등에서 유용함 <br>
+          -> 대용량의 이미지를 가지고 있을 때, 메모리 관리를 편하게 하기 위해서 사용 (불필요한 데이터를 계속 가지고 있을 필요가 없음)
+      * 한계
+        + 약한 참조가 가능한 대상 <br>
+          -> 클래스 인스턴스, 파이썬 함수, 인스턴스메서드, sets, frozensets, 파일객체, 생성자, 타입객체, bsddb모듈의 DBCursor, 소켓, arrays, dequeue, 정규식 패턴 객체
 
 #### 3-2. 세대 기반(Generational Garbage Collector)
 + 레퍼런스 카운팅(주된 방법)과 함께, 위에서 언급함 문제점을 해결하기 위해 파이썬은 세대 기반 쓰레기 수집 기법 사용
 + generation(세대)과 threshold(임계값)로 가비지 컬렉션 주기와 객체를 관리
-+ 기본 흐름: 가비지 컬렉터는 총 3개의 세대를 지니고 파이썬의 모든 객체를 추적. 만일 객체의 수가 임계값을 넘으면 GC가 작동. 이때 첫 세대가 시작되고, 여기서 생존한 객체는 다음(older) 세대로 넘어감.
++ 기본 흐름: 가비지 컬렉터는 총 3개의 세대를 지니고 파이썬의 모든 객체를 추적. 만일 객체의 수가 임계값을 넘으면 파이썬 인터프리터에 의해 GC가 작동. 이때 첫 세대가 시작되고, 여기서 생존한 객체는 다음(older) 세대로 넘어감.
 + 수행 과정
   1. 새로운 객체가 생성되면, 메모리와 0세대에 객체를 할당한다. 이 때, 객체 수가 0세대 임계값보다 크면 collect_generations()가 호출
   2. collect_generations()은 0, 1, 2세대 모두에 대해서 검사를 수행하며 2세대부터 역순으로 진행
@@ -99,7 +171,7 @@
 + 세대가 낮을수록 더욱 자주 GC를 수행 -> 어린 객체가 오래된 객체보다 해제될 가능성이 높다는 가설(generational hypothesis)에 근거
 + **GC 모듈**
   - **gc.collect_generations()** : 모든 세대에 대해서 2세대부터 0세대까지의 순서로 확인하고, 임계치 초과시 collect() 호출
-  - gc.get_count(): 각 세대의 객체 수 확인
+  - **gc.get_count()**: 각 세대의 객체 수 확인
   - Ex) <br>
   \>>> import gc <br>
   \>>> gc.get_count() <br>
@@ -132,6 +204,7 @@
   - **gc.disable()**: 쓰레기 수집 off
 + **순환 참조 해결법(Cyclic GC)**
   - 순환 참조는 컨테이너 객체(e.g. tuple, list, set, dict, class)에 의해서만 발생함. 컨테이너 객체는 다른 객체에 대한 참조를 보유할 수 있음. 그러므로 정수, 문자열을 무시한 채 관심사를 컨테이너 객체에만 집중
+    - ![Cycle](/images/Cycle.png)
   1. 객체에 gc_refs 필드를 레퍼런스 카운트와 동일하게 설정 
   2. 각 객체에 참조하고 있는 다른 컨테이너 객체를 찾고, 참조되는 컨테이너의 gc_refs를 감소시킴
   3. gc_ref가 0이면, 그 객체는 컨테이너 집합 내부에서 자기들끼리 참조하고 있음
