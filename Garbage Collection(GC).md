@@ -119,7 +119,7 @@
        * 함수: class weakref.ref(object\[, callback])
          + 객체에 대한 약한 참조 객체를 반환 <br>
            객체가 메모리에 존재하는 경우 객체에 대한 참조를 반환하며, 그렇지 않은 경우 None을 반환
-      * Ex)
+        * Ex)
           <pre>
           <code>
           import weakref
@@ -137,9 +137,9 @@
             object2.next = weakref.ref(object1)
             print(object2.next is object1)  # object1을 약한 참조 하므로 False
             print(object1.next)
-            # <weakref at 0x7f458ff13bf0; to 'Object' at 0x7f45a4207670> 객체 표현 출력
+            # <\weakref at 0x7f458ff13bf0; to 'Object' at 0x7f45a4207670> 객체 표현 출력
             print(object2.next)
-            # <weakref at 0x7f45a41fca40; to 'Object' at 0x7f45a42072e0> 객체 표현 출력
+            # <\weakref at 0x7f45a41fca40; to 'Object' at 0x7f45a42072e0> 객체 표현 출력
 
             solve_circular_reference()
           </code>
